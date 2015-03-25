@@ -82,6 +82,7 @@ public class MockServerInitializationClass implements ExpectationInitializer {
         ).respond(
             HttpResponse.response()
             .withStatusCode(200)
+            .withHeader(Header.header("Cache-Control", "max-age=600"))
             .withBody("{ \"name\" : \"John Doe\" }")
         );
     }

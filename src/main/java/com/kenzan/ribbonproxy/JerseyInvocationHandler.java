@@ -75,7 +75,7 @@ class JerseyInvocationHandler implements InvocationHandler{
                 object = restAdapterConfig.getMessageSerializer().readValue(methodInfo.responseClass, httpResponse.getInputStream());
             }
 
-            if (cache != null && cachingPolicy.isCachable(httpResponse)) {
+            if (cache != null && cachingPolicy.isCachable(request, httpResponse)) {
                 cache.set(cacheKey, object);
             }
 
@@ -93,7 +93,7 @@ class JerseyInvocationHandler implements InvocationHandler{
         private final Http http;
         private final Hystrix hystrix;
         private final boolean isObservable;
-        private final String cacheKeyGroup;
+        private final Optional<String> cacheKeyGroup;
         private List<String> cookies = new ArrayList<>();
 
         public MethodInfo(final Method method) {
@@ -115,8 +115,7 @@ class JerseyInvocationHandler implements InvocationHandler{
             cacheKeyGroup = Arrays.stream(method.getAnnotations())
                             .filter(a -> CacheKeyGroup.class.equals(a.annotationType()))
                             .map(a -> a == null ? null : ((CacheKeyGroup)a).value())
-                            .findFirst()
-                            .orElse(null);
+                            .findFirst();
 
             this.setter = Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey(hystrix.groupKey()))
                             .andCommandKey(HystrixCommandKey.Factory.asKey(hystrix.commandKey()));
@@ -201,8 +200,8 @@ class JerseyInvocationHandler implements InvocationHandler{
         
 
         private String getCacheKey(Object[] args) {
-            if (cacheKeyGroup != null) {
-                return cacheKeyGroup + ":" + this.getRenderedPath(args);
+            if (cacheKeyGroup.isPresent()) {
+                return cacheKeyGroup.get() + ":" + this.getRenderedPath(args);
             }
 
             return this.getRenderedPath(args);
