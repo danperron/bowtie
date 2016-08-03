@@ -96,7 +96,10 @@ public class RestAdapter {
             restClient.getJerseyClient().addFilter(
                     new GZIPContentEncodingFilter());
         }
-
+        
+        this.restAdapterConfig.getFilters()
+                .forEach((f) -> restClient.getJerseyClient().addFilter(f));
+        
         InvocationHandler invocationHandler = new JerseyInvocationHandler(
                 restClient, this.restAdapterConfig);
         Object proxyInstance = Proxy.newProxyInstance(

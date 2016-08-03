@@ -15,10 +15,13 @@
  */
 package com.kenzan.bowtie;
 
+import com.google.common.collect.ImmutableList;
 import com.kenzan.bowtie.annotation.Encoding;
 import com.kenzan.bowtie.cache.RestCache;
 import com.kenzan.bowtie.serializer.JacksonMessageSerializer;
 import com.kenzan.bowtie.serializer.MessageSerializer;
+import com.sun.jersey.api.client.filter.ClientFilter;
+import java.util.Collection;
 
 /***
  * <p>
@@ -27,12 +30,16 @@ import com.kenzan.bowtie.serializer.MessageSerializer;
  */
 public class RestAdapterConfig {
 
-    private MessageSerializer messageSerializer;
-    private Encoding encoding;
-    private RestCache restCache;
+    private final MessageSerializer messageSerializer;
+    private final Encoding encoding;
+    private final RestCache restCache;
+    private final Collection<ClientFilter> filters;
 
-    private RestAdapterConfig() {
-
+    private RestAdapterConfig(final Builder builder) {
+        this.messageSerializer = builder.messageSerializer;
+        this.encoding = builder.encoding;
+        this.restCache = builder.restCache;
+        this.filters = builder.filtersBuilder.build();
     }
 
     public MessageSerializer getMessageSerializer() {
@@ -45,6 +52,10 @@ public class RestAdapterConfig {
 
     public RestCache getRestCache() {
         return this.restCache;
+    }
+    
+    public Collection<ClientFilter> getFilters(){
+        return this.filters;
     }
 
     public static RestAdapterConfig createDefault(){
@@ -59,9 +70,10 @@ public class RestAdapterConfig {
 
     public static class Builder {
 
-        private MessageSerializer messageSerializer;
-        private Encoding encoding;
-        private RestCache restCache;
+        private MessageSerializer messageSerializer = null;
+        private Encoding encoding = Encoding.none;
+        private RestCache restCache = null;
+        private ImmutableList.Builder<ClientFilter> filtersBuilder = ImmutableList.builder();
 
         private Builder() {
 
@@ -81,14 +93,14 @@ public class RestAdapterConfig {
             this.restCache = restCache;
             return this;
         }
+        
+        public Builder withFilters(final ClientFilter... filters){
+            this.filtersBuilder.add(filters);
+            return this;
+        }
 
         public RestAdapterConfig build() {
-            final RestAdapterConfig restAdapterConfig = new RestAdapterConfig();
-
-            restAdapterConfig.messageSerializer = messageSerializer;
-            restAdapterConfig.encoding = encoding;
-            restAdapterConfig.restCache = restCache;
-
+            final RestAdapterConfig restAdapterConfig = new RestAdapterConfig(this);
             return restAdapterConfig;
         }
     }
